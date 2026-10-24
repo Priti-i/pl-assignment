@@ -1,573 +1,135 @@
-# 🔍 Incident Analyzer: AI-Powered Log Triage
+# Incident Analyzer: AI-Powered Log Triage
 
-> **Practical AI Assignment 1** (Technology Operations Intern)
-> A prototype that reads application logs, works out what went wrong, rates how serious it is,
-> and tells the support engineer what to check first and when to escalate.
+An AI-assisted log triage prototype for Technology Operations and L1/L2 support engineers. It parses application logs, detects recurring errors, estimates severity, suggests likely causes, and provides troubleshooting and escalation guidance.
 
-| | |
-|---|---|
-| **Problem** | After an outage a support engineer has hundreds of log lines and has to find the cause quickly |
-| **Solution** | Paste or upload logs → get key errors, a likely cause (evidence kept apart from assumptions), severity, next steps and a summary ready to share |
-| **AI model** | `qwen2.5:7b`, running **locally** through Ollama (no log data leaves the machine) |
-| **Tech stack** | Node.js 20+ with **zero npm dependencies** (`http`, `fetch`, `node:test`) |
-| **Interfaces** | Web UI (`http://localhost:8000`) · CLI · JSON API |
-| **Works offline / without AI?** | Yes. If the model is unavailable it falls back to a rule-based report |
+> **Live demo:** https://pl-assignment.onrender.com  
+> **Source code:** https://github.com/Priti-i/pl-assignment
 
----
+**Deployment note:** The hosted Render version does not have access to a local Ollama instance, so it uses rule-based analysis when Ollama is unavailable. AI-powered analysis is intended for a local setup where Ollama is running.
 
-## 📑 Contents
-
-1. [Assignment requirements → how they're met](#1-assignment-requirements--how-theyre-met)
-2. [Quick start](#2-quick-start)
-3. [System architecture](#3-system-architecture)
-4. [How one analysis flows (step by step)](#4-how-one-analysis-flows-step-by-step)
-5. [Component breakdown](#5-component-breakdown)
-6. [Log parsing and evidence extraction](#6-log-parsing-and-evidence-extraction)
-7. [Severity classification](#7-severity-classification)
-8. [The AI component](#8-the-ai-component)
-9. [Hallucination guards](#9-hallucination-guards)
-10. [Output: what the engineer sees](#10-output-what-the-engineer-sees)
-11. [API reference](#11-api-reference)
-12. [Testing](#12-testing)
-13. [AI tools used and individual contribution](#13-ai-tools-used-and-individual-contribution)
-14. [Assumptions](#14-assumptions)
-15. [Limitations and future work](#15-limitations-and-future-work)
-16. [Project structure](#16-project-structure)
-
----
-
-## 1. Assignment requirements → how they're met
-
-| # | Requirement (from the assignment) | How this project does it | Where in code |
-|---|---|---|---|
-| 1 | Accept logs by **upload or copy-paste** | Web UI has a file upload, a paste box and a "Load a sample" menu; the CLI reads a file or stdin | `static/index.html`, `src/cli.js` |
-| 2 | **Summarize key errors**, find **patterns / repeated failures** | Parser normalizes messages into *signatures*, counts repeats, finds the error peak per minute | `src/parser.js` |
-| 3 | **Likely cause**, with **evidence kept apart from assumptions** | The LLM must return separate `evidence[]` and `assumptions[]` lists; each evidence item is checked against the raw logs | `src/prompts.js`, `src/pipeline.js` |
-| 4 | **Severity**: Critical / High / Medium / Low, with a reason | The LLM rating plus an independent rule-based baseline; the UI flags any disagreement | `src/rules.js`, `src/prompts.js` |
-| 5 | **Troubleshooting steps** and **when to escalate** | 4–7 steps, *checks before fixes*, plus an escalation block (who and when) | `src/prompts.js`, `src/rules.js` |
-| 6 | **Concise incident summary** to share with the team | Markdown summary ready for Slack, Teams or email (copy button in the UI) | `toMarkdown()` in `src/pipeline.js` |
-| — | Sample or simulated data only | Four simulated incidents plus a generator script | `sample_logs/` |
-| — | Don't present guesses as facts | Cause is labelled a *hypothesis* with a confidence level; claims not found in the logs are flagged | §9 |
-
----
-
-## 2. Quick start
-
-**Requirements:** Node.js 20+ and [Ollama](https://ollama.com). There are no npm dependencies, so there's nothing to `npm install`.
+## Quick Start
 
 ```bash
-ollama pull qwen2.5:7b     # one-time download, ~4.7 GB
+ollama pull qwen2.5:7b     # one-time download; approximately 4.7 GB
 npm start                  # open http://localhost:8000
+npm test                   # run the automated tests
+node src/cli.js sample_logs/payment_db_outage.log
+node src/cli.js sample_logs/payment_db_outage.log --no-ai
 ```
 
-In the UI: **Load a sample…** (or upload/paste logs) → **Analyze logs**.
-The pill in the header shows whether the model is ready. If it isn't, the tool still works using rules only.
+Requirements: Node.js 20+; install Ollama locally for AI-powered analysis. The project uses Node.js built-in modules and does not require third-party npm packages according to the current project setup.
 
-### Command line
+## Problem Statement
 
-| Command | What it does |
-|---|---|
-| `node src/cli.js sample_logs/payment_db_outage.log` | Markdown incident report |
-| `node src/cli.js sample_logs/payment_db_outage.log --json` | Full JSON result (report + evidence + metadata) |
-| `node src/cli.js sample_logs/payment_db_outage.log --no-ai` | Rule-based analysis only (fast, no model) |
-| `cat app.log \| node src/cli.js -` | Read logs from stdin |
-| `npm test` | Run the 14 unit tests |
-| `npm run samples` | Regenerate the sample logs |
+When an application fails, support engineers may need to read many log lines to identify errors, understand impact, and decide what to investigate next. Manual analysis can take time.
 
-### Configuration
+This prototype accepts application logs and generates a structured incident report containing key errors, recurring patterns, a likely-cause hypothesis, severity, troubleshooting steps, and escalation guidance.
 
-| Env var | Default | Purpose |
-|---|---|---|
-| `OLLAMA_MODEL` | `qwen2.5:7b` | Any Ollama model, e.g. `llama3.1:8b` |
-| `OLLAMA_HOST` | `http://localhost:11434` | Ollama endpoint |
-| `OLLAMA_TIMEOUT` | `300` | Seconds to wait for the model |
-| `PORT` | `8000` | Web server port |
-| `HOST` | `127.0.0.1` (`0.0.0.0` on Render) | Address to listen on; set `0.0.0.0` on other cloud hosts |
+**Goal:** Help engineers triage incidents faster while keeping the distinction between log evidence and unconfirmed assumptions visible.
 
----
+## Technology Stack
 
-## 3. System architecture
+- **Runtime:** Node.js 20+
+- **Server:** Node.js built-in `http` module
+- **AI runtime:** Ollama
+- **Default model:** `qwen2.5:7b`
+- **Testing:** Node.js built-in test runner (`node:test`)
+- **Version control and hosting:** Git and GitHub
+- **Deployment:** Render
 
-**Design principle: code handles the facts, the AI handles the reasoning.**
-Small local models are bad at counting and tend to invent details, so every number comes from
-deterministic code. The model only interprets those numbers.
+## AI Tools and Models Used
 
-```mermaid
-flowchart LR
-    subgraph Input
-        A1[📄 Upload file]
-        A2[📋 Paste logs]
-        A3[🧪 Sample logs]
-        A4[⌨️ CLI / stdin]
-    end
+### Runtime AI Model — Qwen 2.5 (7B) via Ollama
 
-    subgraph Server["Node.js server (server.js)"]
-        P[Parser<br/>src/parser.js]
-        R[Rule engine<br/>src/rules.js]
-        L[LLM client<br/>src/llm.js]
-        V[Validate &<br/>normalize]
-        G[Grounding<br/>check]
-        M[Markdown<br/>summary]
-    end
+The project uses Qwen 2.5 (7B) through Ollama, with a temperature of `0.1` and JSON-schema output to generate structured log analysis. The model is intended to run locally on a 16 GB laptop, helping keep logs on the machine when both the application and Ollama run locally.
 
-    O[(Ollama<br/>qwen2.5:7b<br/>local)]
+### Development Assistant — Claude Code (Anthropic)
 
-    A1 & A2 & A3 & A4 --> P
-    P -- facts --> R
-    P -- facts + excerpt --> L
-    R -- baseline severity --> L
-    L <--> O
-    L --> V --> G --> M
-    R -. fallback report<br/>if AI fails .-> G
-    M --> UI[🖥️ Web UI / CLI output]
+Claude Code assisted with writing application code, designing prompts, and creating tests. Generated output was reviewed and refined based on actual model runs.
+
+## How It Works
+
+1. **Input:** The user pastes logs, uploads a log file, or selects sample logs.
+2. **Parsing — `src/parser.js`:** Reads plain-text and JSON logs, groups repeated errors into signatures, masks IDs and numbers where applicable, and counts errors by service, minute, and failure type.
+3. **Rule engine — `src/rules.js`:** Calculates a transparent baseline severity from the extracted evidence and can provide a fallback report if AI analysis is unavailable.
+4. **AI analysis — `src/llm.js` and `src/prompts.js`:** Sends parsed facts and a log excerpt of at most 6 KB to the Ollama model. The model is instructed to return structured JSON with separate evidence and assumptions, a root-cause hypothesis, and checks to perform before fixes.
+5. **Validation — `src/pipeline.js`:** Normalizes malformed output where possible, checks cited errors and evidence against the raw logs, labels unmatched items as **“not found in logs”**, and flags disagreement between AI severity and the rule-based baseline.
+6. **Report:** Displays the incident summary, key errors, patterns, likely cause, troubleshooting steps, escalation guidance, and a shareable Markdown summary.
+
+## Architecture
+
+![Incident Analyzer architecture flowchart](screenshots/01-architecture-flowchart.png)
+
+The parser feeds both the rule engine and the AI model. Their results are validated before being shown in the report. If AI analysis fails, the rule engine can provide the fallback report.
+
+## Screenshots
+
+These screenshots are from the live Render deployment. Ollama isn't available there, so the results come from the rule-based fallback. Running locally with Ollama produces the same layout with AI-generated analysis.
+
+### 1. Home screen: provide logs
+
+Upload a log file, load a sample, or paste logs. The pill in the top-right shows whether the AI model is available.
+
+![Home screen with upload, sample selector and log input](screenshots/02-home.png)
+
+### 2. Incident summary and severity
+
+After you click **Analyze logs**, the report opens with the severity badge, a one-line summary, the reasoning behind the severity, the impact, and the rule-based baseline for comparison.
+
+![Incident summary with High severity and rule-based baseline](screenshots/03-incident-summary.png)
+
+### 3. Key errors, patterns and likely cause
+
+Repeated errors are grouped with counts, services and time ranges. Each one is marked **verified** when it is found in the raw logs. The likely cause is shown as a hypothesis, with **Evidence (seen in logs)** kept separate from **Assumptions (not confirmed)**.
+
+![Key errors table, repeated failures and likely cause with evidence and assumptions](screenshots/04-key-errors-and-cause.png)
+
+### 4. Troubleshooting steps and escalation
+
+Steps are ordered with checks first, and each step says why it matters. The escalation panel shows whether to escalate, to whom, and when.
+
+![Recommended troubleshooting steps and escalation guidance](screenshots/05-steps-and-escalation.png)
+
+### 5. Shareable summary and raw JSON
+
+A Markdown summary ready to paste into Slack, Teams or email, plus the full analysis as JSON for debugging.
+
+![Shareable Markdown summary and raw analysis JSON](screenshots/06-markdown-and-json.png)
+
+## Testing
+
+Testing should cover the parser, rule engine, AI response handling, grounding checks, fallback behavior, and user input validation.
+
+Suggested scenarios:
+
+- Database connection timeout
+- Repeated HTTP 500 errors
+- Out-of-memory errors
+- HTTP 401/403 authentication failures
+- Repeated error signatures
+- Empty or malformed input
+- Ollama unavailable, to verify the rule-based fallback
+- AI evidence that cannot be matched to the raw logs
+- Difference between AI severity and the rule-based baseline
+
+Run the automated tests with:
+
+```bash
+npm test
 ```
 
-### Why a hybrid (rules + AI) design?
+The project is expected to have 14 unit tests according to the current project notes. Confirm the output from `npm test` before reporting the final test result; do not mark a scenario as passed unless it has been verified.
 
-| Approach | Strengths | Weaknesses |
-|---|---|---|
-| Rules only | Fast, predictable, never invents anything | Can't reason about cause and effect; keyword matching only |
-| LLM only | Understands context and writes good explanations | Miscounts, invents details, output not guaranteed to be valid |
-| **Hybrid (this project)** ✅ | Accurate facts **and** good reasoning; claims can be checked; still works without the AI | Slightly more code |
+## Limitations
 
----
+- The 7B model may associate unrelated events. Grounding checks and the baseline help make this visible but do not guarantee correct reasoning.
+- The grounding check uses word overlap; it can flag unmatched items but cannot prove that a conclusion is logically correct.
+- Local AI analysis may take approximately 35–70 seconds, depending on the machine and model load.
+- The model receives a log excerpt of at most 6 KB, although the parser can count entries across the input.
+- The prototype analyzes one log batch at a time and does not correlate logs with metrics, traces, or other uploads.
+- Severity thresholds and troubleshooting guidance are heuristic and have not been tuned against a labelled production-incident dataset.
+- The hosted Render deployment does not have a local Ollama service available and therefore uses rule-based analysis when AI is unreachable.
 
-## 4. How one analysis flows (step by step)
+## Responsible Use
 
-```mermaid
-sequenceDiagram
-    actor U as Support engineer
-    participant UI as Web UI
-    participant S as server.js
-    participant P as Parser
-    participant R as Rules
-    participant L as LLM client
-    participant O as Ollama
-
-    U->>UI: Paste / upload logs, click Analyze
-    UI->>S: POST /api/analyze {logs, use_llm}
-    S->>P: extractEvidence(logs)
-    P-->>S: counts, signatures, timeline, categories
-    S->>R: baselineSeverity(evidence)
-    R-->>S: level + reasons
-    S->>L: facts + log excerpt (≤6 KB) + JSON schema
-    L->>O: /api/chat (temperature 0.1)
-    alt Model answers
-        O-->>L: JSON report
-        L-->>S: normalizeReport()
-    else Ollama down / invalid JSON
-        L-->>S: LLMError
-        S->>R: fallbackReport(evidence)
-    end
-    S->>S: groundCheck(report, raw logs)
-    S->>S: toMarkdown()
-    S-->>UI: report + baseline + grounding + evidence
-    UI-->>U: Severity, cause, steps, summary
-```
-
-| Step | Stage | Input | Output | Uses AI? |
-|---|---|---|---|---|
-| 1 | Input check | Raw text | Rejects empty or unrecognisable input | ❌ |
-| 2 | Parse | Raw text | Structured entries (time, level, service, message) | ❌ |
-| 3 | Extract evidence | Entries | Counts, signatures, categories, timeline | ❌ |
-| 4 | Baseline severity | Evidence | Rule-based level + reasons | ❌ |
-| 5 | Build prompt | Evidence + excerpt | Facts JSON + trimmed logs | ❌ |
-| 6 | **Reason** | Prompt | Cause, severity, steps, summary (JSON) | ✅ |
-| 7 | Normalize | Model JSON | Safe, well-formed report | ❌ |
-| 8 | Grounding check | Report + raw logs | Each claim marked as found / not found | ❌ |
-| 9 | Format | Report | Markdown summary to share | ❌ |
-
-AI is used in **1 of 9 steps**. Everything else is deterministic and can be tested.
-
----
-
-## 5. Component breakdown
-
-| File | Role | Key functions | Lines |
-|---|---|---|---|
-| `server.js` | HTTP server: serves the UI and JSON API | `handle()` | ~110 |
-| `static/index.html` | Single-page UI, no external libraries | — | ~585 |
-| `src/parser.js` | Parses logs and extracts evidence | `parseLogs`, `extractEvidence`, `normalize`, `selectExcerpt` | ~275 |
-| `src/rules.js` | Baseline severity and fallback playbook | `baselineSeverity`, `fallbackReport` | ~190 |
-| `src/prompts.js` | System prompt and output JSON schema | `SYSTEM_PROMPT`, `OUTPUT_SCHEMA`, `buildUserPrompt` | ~60 |
-| `src/llm.js` | Ollama client (built-in `fetch`) | `health`, `chatJson` | ~70 |
-| `src/pipeline.js` | Orchestration, validation, grounding, Markdown | `analyze`, `normalizeReport`, `grounded`, `toMarkdown` | ~160 |
-| `src/cli.js` | Command-line interface | — | ~25 |
-| `tests/analyzer.test.js` | Unit tests | 14 tests | — |
-
-```mermaid
-flowchart TD
-    server[server.js] --> pipeline
-    cli[src/cli.js] --> pipeline
-    pipeline[src/pipeline.js] --> parser[src/parser.js]
-    pipeline --> rules[src/rules.js]
-    pipeline --> prompts[src/prompts.js]
-    pipeline --> llm[src/llm.js]
-    llm --> ollama[(Ollama)]
-    server --> static[static/index.html]
-```
-
----
-
-## 6. Log parsing and evidence extraction
-
-### Supported log formats
-
-| Format | Example |
-|---|---|
-| Plain text | `2026-10-22 14:01:08,202 ERROR [payment-service] Unable to acquire JDBC Connection ...` |
-| Key=value service | `2026-10-22T14:01:08Z WARN service=checkout Heap usage 92%` |
-| JSON lines | `{"timestamp":"...","level":"warn","service":"notify","message":"SMTP retry succeeded"}` |
-| Level keyword only | `ERROR something failed` |
-| Stack traces | Lines starting with whitespace, `Traceback`, `Caused by:` or `... N more` are attached to the entry above |
-
-### Signature normalization (grouping repeated errors)
-
-Variable parts are replaced with placeholders, so the same error with different IDs counts as **one** repeated failure:
-
-```
-Before: POST /api/v1/payments txn=TXN-503461 failed ... timed out after 30000ms status=504
-        POST /api/v1/payments txn=TXN-573933 failed ... timed out after 30000ms status=504
-After:  POST /api/v1/payments txn=<ID> failed ... timed out after <N> status=<N>     (×14)
-```
-
-### Evidence the parser computes
-
-| Evidence | Description | Why it matters |
-|---|---|---|
-| Level counts | INFO / WARN / ERROR / FATAL totals | Overall health |
-| Error ratio | errors ÷ parsed entries | Feeds the severity rules |
-| Services | Entries and errors per service | Shows how far the problem spread |
-| Top signatures | Most frequent normalized errors, with first and last seen | Key errors |
-| Repeated failures | Signatures seen 3+ times | Patterns |
-| First-occurrence sequence | Signatures in order of first appearance | Separates the **trigger** from **knock-on symptoms** |
-| Errors per minute | Peak error minute | When it got worst |
-| Failure categories | Regex matches (table below) | Likely cause area |
-| HTTP status codes | 4xx / 5xx counts | User impact |
-| Business keywords | payment, checkout, order, login… | Is a critical flow affected? |
-| Recovery signals | "succeeded", "recovered", "reconnected"… | Lowers severity |
-
-### Failure categories detected
-
-| Category | Matches (examples) | Fallback escalation target |
-|---|---|---|
-| `db_connection` | connection pool, HikariPool, JDBC, too many connections, deadlock | Database / DBA on-call |
-| `timeout` | timed out, timeout, deadline exceeded | Owner of the slow dependency |
-| `memory` | OutOfMemory, OOM, heap space, GC overhead | Application engineering |
-| `crash` | fatal, panic, CrashLoop, exited with code, killed | Application engineering (on-call) |
-| `upstream_5xx` | 502, 503, 504, bad gateway, service unavailable | Owner of the upstream service |
-| `connection_refused` | ECONNREFUSED, connection reset, broken pipe | Platform / network |
-| `circuit_breaker` | circuit breaker, circuit is open, fallback | Owner of the failing dependency |
-| `disk` | no space left, disk full, inode | Infrastructure / SRE |
-| `auth` | unauthorized, forbidden, token expired, 401, 403 | Identity / security |
-| `rate_limit` | 429, rate limit, throttle | Owner of the rate-limited API |
-| `tls` | certificate, SSL, TLS handshake, x509 | Platform / security |
-
-### Excerpt selection (what the model actually reads)
-
-A 7B model has a small context window, so the model doesn't get the whole file. It gets a **trimmed excerpt of at most ~6 KB**:
-
-```mermaid
-flowchart LR
-    A[Full log<br/>any size] --> B[Collapse repeated<br/>lines]
-    B --> C[Prioritise<br/>ERROR / WARN]
-    C --> D[Cap at ~6 KB]
-    D --> E[Excerpt for the LLM]
-    A --> F[Parser still counts<br/>EVERY line]
-```
-
----
-
-## 7. Severity classification
-
-Severity is decided **twice**, independently. The two ratings are compared and the UI warns when they differ.
-
-```mermaid
-flowchart TD
-    E[Evidence] --> B[Rule-based baseline]
-    E --> AI[LLM severity + reason]
-    B --> C{Same level?}
-    AI --> C
-    C -- Yes --> OK[✅ Show severity]
-    C -- No --> W[⚠️ Show both and flag<br/>'review before acting']
-```
-
-### Severity scale (shared by the AI prompt and the rules)
-
-| Level | Meaning | Typical signals |
-|---|---|---|
-| 🔴 **Critical** | Outage: a business-critical flow is failing, a service is down or crash-looping, or data is at risk | Crash/FATAL **and** (payment/checkout affected, ≥30% error rate, or 3+ services) |
-| 🟠 **High** | Major feature degraded or high error rate, but core flows mostly work | Crash alone, or ≥10 errors with a business flow or ≥30% error rate, or a business flow with ≥5 errors |
-| 🟡 **Medium** | Intermittent errors or slowness; fallbacks and retries keep things working | ≥3 errors or ≥10 warnings |
-| 🟢 **Low** | Isolated warnings or errors that recovered by themselves, no user impact | Anything below that |
-
-### Rule-based baseline as a decision tree
-
-```mermaid
-flowchart TD
-    S([Start]) --> Q1{Crash / FATAL<br/>present?}
-    Q1 -- Yes --> Q2{Business flow hit<br/>OR error rate ≥30%<br/>OR 3+ services?}
-    Q2 -- Yes --> CR[🔴 Critical]
-    Q2 -- No --> HI[🟠 High]
-    Q1 -- No --> Q3{≥10 errors AND<br/>business flow or ≥30%?<br/>OR business flow AND ≥5 errors?}
-    Q3 -- Yes --> HI
-    Q3 -- No --> Q4{≥3 errors OR<br/>≥10 warnings?}
-    Q4 -- Yes --> ME[🟡 Medium]
-    Q4 -- No --> LO[🟢 Low]
-```
-
----
-
-## 8. The AI component
-
-| Setting | Value | Why |
-|---|---|---|
-| Runtime | Ollama (local) | Log data never leaves the machine; free; works offline |
-| Model | `qwen2.5:7b` | Reliable structured-JSON output; fits on a 16 GB laptop |
-| Output format | Ollama `format` = **JSON schema** | The model can only answer in the expected structure |
-| Temperature | `0.1` | Triage should be consistent, not creative |
-| Context | `num_ctx: 8192` | Enough for the facts plus a ~6 KB excerpt |
-| Timeout | 300 s (configurable) | Local inference can take a minute or more |
-
-### What goes into the prompt
-
-```mermaid
-flowchart LR
-    SP[System prompt<br/>role + rules + severity scale] --> MODEL
-    F[PARSED FACTS<br/>counts · signatures · timeline<br/>· baseline severity] --> MODEL
-    X[LOG EXCERPT<br/>errors/warnings first] --> MODEL
-    SC[JSON schema] --> MODEL
-    MODEL((qwen2.5:7b)) --> OUT[Structured JSON report]
-```
-
-### Prompt rules and the problem each one solves
-
-| Rule in the system prompt | Problem it prevents |
-|---|---|
-| Base every claim on the facts or excerpt; never invent services or errors | Hallucination |
-| Evidence must cite a log message, timestamp or count; anything not shown in the logs is an **assumption** | Guesses presented as facts |
-| "Don't claim a traffic spike unless request volume visibly rises" | The model inventing a "sudden spike in requests" (seen in the first prompt version) |
-| State the cause as a **hypothesis** with High / Medium / Low confidence | Overconfidence |
-| Use the first-occurrence sequence to separate trigger from symptoms | Blaming a symptom (e.g. 504s) instead of the trigger |
-| Things happening in sequence **don't** prove causation | Forcing unrelated warnings into one story |
-| Recovery signals lower severity | Over-rating incidents that recovered by themselves |
-| Use the parser's counts; don't count yourself | Wrong numbers |
-| Steps: **check and verify first**, then contain; no permanent config changes before the cause is confirmed | "Just raise the pool size" advice |
-| Explain any disagreement with the baseline severity | Unexplained severity ratings |
-
-### Output schema
-
-| Field | Type | Content |
-|---|---|---|
-| `key_errors[]` | `{error, count, services[], significance}` | The most important errors |
-| `patterns[]` | string[] | Repeated failures and trends |
-| `likely_cause` | `{hypothesis, confidence, evidence[], assumptions[]}` | Cause, with evidence and assumptions kept separate |
-| `contributing_factors[]` | string[] | Secondary factors |
-| `impact` | string | Effect on users and business |
-| `severity` | `{level, reason}` | Critical / High / Medium / Low |
-| `troubleshooting_steps[]` | `{step, why}` | Ordered steps, checks first |
-| `escalation` | `{required, to, when}` | Whether to escalate, to whom and when |
-| `incident_summary` | string | 3–5 sentences ready for Slack |
-
----
-
-## 9. Hallucination guards
-
-Several layers protect against bad AI output:
-
-```mermaid
-flowchart TD
-    A[LLM raw output] --> L1[1 · JSON schema constraint<br/>model must follow the structure]
-    L1 --> L2[2 · normalizeReport<br/>fix enums, lists and defaults]
-    L2 --> L3[3 · Grounding check<br/>each claim vs raw logs]
-    L3 --> L4[4 · Baseline comparison<br/>flag severity mismatch]
-    L4 --> L5[5 · Fallback<br/>rules-only report if the AI fails]
-    L5 --> OUT[Safe report shown to the engineer]
-```
-
-| Layer | What it does | Catches |
-|---|---|---|
-| 1. JSON schema | Ollama limits generation to the schema | Free-text or wrongly shaped answers |
-| 2. Normalization | Coerces types, clamps enums (e.g. `"critical"` → `Critical`, unknown → `Medium`) | Malformed fields that would break the UI |
-| 3. Grounding check | ≥50% of a claim's distinctive words must appear in the logs, otherwise it's labelled **"not found in logs"** | Invented components, hosts or errors |
-| 4. Baseline comparison | Rule-based severity is shown next to the AI's | AI over- or under-rating |
-| 5. Fallback | Ollama down or invalid JSON → full rule-based report | Total AI failure |
-
----
-
-## 10. Output: what the engineer sees
-
-| UI section | Content |
-|---|---|
-| Severity badge | AI level + rule baseline (⚠️ if they differ) |
-| Key errors | Signature, count, services, ✅/⚠️ grounded |
-| Patterns | Repeated failures, error peak |
-| Likely cause | Hypothesis + confidence · **Evidence** (with grounding marks) · **Assumptions** |
-| Impact & contributing factors | Business and user effect |
-| Troubleshooting steps | Numbered, each with a *why* |
-| Escalation | Required? · to whom · when |
-| Incident summary | Markdown with a copy button for Slack, Teams or email |
-| Metadata | Model, duration, tokens, AI or rules source |
-
-### Example shareable summary (`payment_db_outage.log`, rules mode)
-
-```markdown
-## Incident Summary — Severity: Critical
-
-[Critical] 41 errors across 4 service(s) between 2026-10-22 14:00:06 and 2026-10-22 14:02:17.
-Likely area: db_connection.
-
-**Errors:** 41 / 65 entries (63%) · **Services:** payment-service, api-gateway, order-service, payment-db
-
-### Key errors
-- Unable to acquire JDBC Connection: HikariPool-<N> - Connection is not available ... (×14, payment-service)
-- POST /api/v1/payments txn=<ID> failed: PaymentGatewayTimeoutException ... (×14, payment-service)
-- upstream payment-service returned <N> Gateway Timeout ... (×7, api-gateway)
-
-### Likely cause (hypothesis, confidence: Low)
-Database connectivity problems (connection pool exhaustion, slow queries or DB unavailability).
-
-**Evidence (from logs):** ...
-**Assumptions (not confirmed):** ...
-### Next steps
-1. Start from the first error in the window ...
-**Escalation:** Yes — Database / DBA on-call ...
-```
-
----
-
-## 11. API reference
-
-| Method | Endpoint | Body / params | Response |
-|---|---|---|---|
-| `GET` | `/` | — | Web UI |
-| `GET` | `/api/health` | — | `{ollama, model, model_ready, installed[], error}` |
-| `GET` | `/api/samples` | — | `{samples: ["payment_db_outage.log", ...]}` |
-| `GET` | `/api/samples/<name>` | file name | Raw sample log text |
-| `POST` | `/api/analyze` | `{"logs": "...", "use_llm": true}` | `{report, baseline, grounding, evidence, meta, markdown}` |
-
-| Status | When |
-|---|---|
-| `200` | Analysis complete (AI or rules fallback) |
-| `400` | Empty input, no recognisable log lines, or invalid JSON |
-| `413` | Body larger than 5 MB |
-| `500` | Unexpected server error (the server stays up) |
-
----
-
-## 12. Testing
-
-### Unit tests: `npm test` (14 tests, all passing)
-
-| Area | Test | What it checks |
-|---|---|---|
-| Parser | parses common formats | Plain, JSON-lines and level-only lines |
-| Parser | stack trace lines attach to parent | Multi-line exceptions stay together |
-| Parser | normalize groups variable parts | IDs, numbers and IPs → placeholders |
-| Parser | repeated failures are counted | 3+ repeats are detected |
-| Parser | recovery signals are detected | "succeeded" / "recovered" |
-| Parser | excerpt respects budget and keeps errors | ≤6 KB, errors kept |
-| Rules | `<sample> → <expected>` (×4) | Baseline severity for each sample |
-| Pipeline | grounding flags invented claims | A made-up claim is marked "not found" |
-| Pipeline | falls back to rules when Ollama is down | Simulated outage → rules report |
-| Pipeline | malformed model output is normalized | Bad enums and types are fixed |
-| Pipeline | rejects empty and unstructured input | Clear error messages |
-
-### Scenario testing with the real model
-
-Four simulated incidents in `sample_logs/` (regenerate with `npm run samples`):
-
-| Sample | Simulated scenario | Expected | Rule baseline | AI (`qwen2.5:7b`) |
-|---|---|---|---|---|
-| `payment_db_outage.log` | Slow query → DB pool exhaustion → payment 504s → circuit breaker open | 🔴 Critical | Critical ✅ | Critical ✅ (12/12 items grounded) |
-| `checkout_memory_leak.log` | Heap growth → OOM → CrashLoopBackOff → checkout 503s | 🔴 Critical | Critical ✅ | High ⚠️ (mismatch flagged in UI) |
-| `cache_latency_degraded.log` | Redis latency and evictions; DB fallback working | 🟡 Medium | Medium ✅ | Medium ✅ |
-| `minor_warnings.jsonl` | Deprecation warning, SMTP retry succeeded, missing template | 🟢 Low | Low ✅ | Low ✅ |
-
-Example incident chain (payment DB outage), and what the tool should recognise:
-
-```mermaid
-flowchart LR
-    A[Slow query<br/>WARN] --> B[Hikari pool 85%→100%<br/>WARN]
-    B --> C[Cannot acquire<br/>JDBC connection<br/>ERROR ×14]
-    C --> D[Payment timeouts<br/>504 ×14]
-    D --> E[API gateway 504<br/>×7]
-    D --> F[Circuit breaker OPEN<br/>checkout fails ×4]
-    style A fill:#ffd6d6
-    style B fill:#ffd6d6
-```
-
-<sub>Red = likely trigger; the rest are knock-on symptoms.</sub>
-
-### Prompt iteration
-
-| Version | Problem observed | Change made | Result |
-|---|---|---|---|
-| v1 | Claimed a "sudden spike in payment requests" with High confidence, which nothing in the logs supported | Added explicit evidence-vs-assumption rules (including "no traffic spike unless visible") | Spike claim gone |
-| v1 | Recommended raising the pool size before any investigation | Added the "check / verify first, no permanent config changes before confirmed" rule | Steps now start with checks |
-| v2 | Needed more context to tell the trigger apart from symptoms | Model now also receives `sequence_of_first_occurrence` and the rule baseline, plus a "timing ≠ causation" rule | 3 of 4 scenarios match the expected severity; the memory leak (AI: High, rules: Critical) is flagged in the UI |
-
----
-
-## 13. AI tools used and individual contribution
-
-| Purpose | Tool |
-|---|---|
-| Runtime model | `qwen2.5:7b` via Ollama (local), on a 16 GB MacBook Air M5 |
-| Backend | Node.js 24 (built-ins only) |
-| Development assistant | Claude Code (Anthropic) helped write code, prompts and tests; all output was reviewed and iterated against real model runs |
-
-> **Individual contribution:** _fill in what you designed, decided and changed yourself, e.g. the
-> choice of a hybrid rules + LLM architecture, prompt iterations, sample scenarios, and test cases._
-
----
-
-## 14. Assumptions
-
-| Area | Assumption |
-|---|---|
-| Log format | Text with a timestamp and/or level keyword, or JSON lines with `timestamp / level / service / message`-style keys |
-| Services | Taken from `[brackets]`, `service=` keys or JSON fields; otherwise `unknown` |
-| Business-critical flows | Detected by keywords: payment, checkout, order, transaction, billing, login, settlement |
-| Data | All simulated; nothing connects to production systems |
-| Scope | One batch of logs per analysis |
-
----
-
-## 15. Limitations and future work
-
-| Limitation | Effect | Possible improvement |
-|---|---|---|
-| A 7B model sometimes draws weak cause-and-effect links | Wrong cause story (e.g. unrelated warnings linked together) | Larger model, or a second "critic" pass |
-| Grounding uses word overlap | Catches invented items, but can't verify the logic of a claim | Semantic or embedding-based matching, line-level citations |
-| Speed: ~35–70 s per analysis | Slow for live triage | Smaller or quantized model, GPU, streaming output |
-| Excerpt capped at ~6 KB | The model doesn't see every line (the parser still counts them all) | Chunked or map-reduce summarisation |
-| Single batch, logs only | No correlation across uploads, metrics or traces | Combine with metrics, traces and deploy history |
-| Heuristic thresholds and playbook | Not tuned on real incident data | Calibrate on historical incidents |
-
----
-
-## 16. Project structure
-
-```
-pl-assignment/
-├── server.js                 Web server (node:http): UI + JSON API
-├── package.json              Scripts: start, test, analyze, samples
-├── static/
-│   └── index.html            Single-page UI (no external dependencies)
-├── src/
-│   ├── parser.js             Log parsing & evidence extraction
-│   ├── rules.js              Baseline severity + rule-based fallback playbook
-│   ├── prompts.js            System prompt + JSON output schema
-│   ├── llm.js                Ollama client (built-in fetch)
-│   ├── pipeline.js           Orchestration, validation, grounding, Markdown
-│   └── cli.js                Command-line interface
-├── sample_logs/
-│   ├── generate-samples.js   Generator for the simulated incidents
-│   ├── payment_db_outage.log
-│   ├── checkout_memory_leak.log
-│   ├── cache_latency_degraded.log
-│   └── minor_warnings.jsonl
-└── tests/
-    └── analyzer.test.js      14 unit tests (node:test)
-```
+Treat the suggested root cause as a hypothesis, not a confirmed diagnosis. Verify evidence and troubleshooting steps before taking action. Do not submit passwords, access tokens, personal information, or confidential production logs unless the environment's data-handling and security arrangements have been approved.
