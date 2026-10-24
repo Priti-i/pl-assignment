@@ -1,0 +1,17 @@
+{
+  "name": "incident-analyzer",
+  "version": "1.0.0",
+  "description": "AI-powered incident analyzer: log triage with a local Ollama model",
+  "type": "module",
+  "main": "server.js",
+  "engines": {
+    "node": ">=20"
+  },
+  "scripts": {
+    "start": "node server.js",
+    "test": "node --test \"tests/**/*.test.js\"",
+    "analyze": "node src/cli.js",
+    "samples": "node sample_logs/generate-samples.js"
+  },
+  "license": "MIT"
+}

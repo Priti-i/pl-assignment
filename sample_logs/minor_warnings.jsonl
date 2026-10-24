@@ -1,0 +1,29 @@
+{"timestamp":"2026-10-19T11:00:32Z","level":"INFO","service":"notification-service","message":"Email queued for user 6950"}
+{"timestamp":"2026-10-19T11:01:06Z","level":"INFO","service":"notification-service","message":"Email queued for user 5939"}
+{"timestamp":"2026-10-19T11:01:40Z","level":"INFO","service":"notification-service","message":"Email queued for user 5743"}
+{"timestamp":"2026-10-19T11:01:55Z","level":"INFO","service":"notification-service","message":"Email queued for user 1702"}
+{"timestamp":"2026-10-19T11:02:08Z","level":"INFO","service":"notification-service","message":"Email queued for user 1536"}
+{"timestamp":"2026-10-19T11:02:08Z","level":"WARN","service":"notification-service","message":"Config key 'smtp.legacy_tls' is deprecated and will be removed in v3.0"}
+{"timestamp":"2026-10-19T11:02:26Z","level":"INFO","service":"notification-service","message":"Email queued for user 7049"}
+{"timestamp":"2026-10-19T11:02:56Z","level":"INFO","service":"notification-service","message":"Email queued for user 6049"}
+{"timestamp":"2026-10-19T11:03:35Z","level":"INFO","service":"notification-service","message":"Email queued for user 1199"}
+{"timestamp":"2026-10-19T11:03:57Z","level":"INFO","service":"notification-service","message":"Email queued for user 4040"}
+{"timestamp":"2026-10-19T11:04:16Z","level":"INFO","service":"notification-service","message":"Email queued for user 8497"}
+{"timestamp":"2026-10-19T11:04:42Z","level":"INFO","service":"notification-service","message":"Email queued for user 2844"}
+{"timestamp":"2026-10-19T11:05:20Z","level":"INFO","service":"notification-service","message":"Email queued for user 9568"}
+{"timestamp":"2026-10-19T11:05:20Z","level":"WARN","service":"notification-service","message":"SMTP send attempt 1 failed: 421 Service not available, retrying in 5s"}
+{"timestamp":"2026-10-19T11:05:38Z","level":"INFO","service":"notification-service","message":"Email queued for user 5665"}
+{"timestamp":"2026-10-19T11:05:38Z","level":"INFO","service":"notification-service","message":"SMTP send attempt 2 succeeded"}
+{"timestamp":"2026-10-19T11:06:14Z","level":"INFO","service":"notification-service","message":"Email queued for user 9418"}
+{"timestamp":"2026-10-19T11:06:45Z","level":"INFO","service":"notification-service","message":"Email queued for user 6116"}
+{"timestamp":"2026-10-19T11:07:19Z","level":"INFO","service":"notification-service","message":"Email queued for user 3807"}
+{"timestamp":"2026-10-19T11:07:44Z","level":"INFO","service":"notification-service","message":"Email queued for user 7752"}
+{"timestamp":"2026-10-19T11:08:10Z","level":"INFO","service":"notification-service","message":"Email queued for user 7185"}
+{"timestamp":"2026-10-19T11:08:37Z","level":"INFO","service":"notification-service","message":"Email queued for user 5914"}
+{"timestamp":"2026-10-19T11:08:37Z","level":"ERROR","service":"notification-service","message":"Template 'promo_banner_v2' not found for locale fr-CA, using default template"}
+{"timestamp":"2026-10-19T11:09:16Z","level":"INFO","service":"notification-service","message":"Email queued for user 9858"}
+{"timestamp":"2026-10-19T11:09:49Z","level":"INFO","service":"notification-service","message":"Email queued for user 3778"}
+{"timestamp":"2026-10-19T11:10:18Z","level":"INFO","service":"notification-service","message":"Email queued for user 7011"}
+{"timestamp":"2026-10-19T11:10:54Z","level":"INFO","service":"notification-service","message":"Email queued for user 4481"}
+{"timestamp":"2026-10-19T11:11:30Z","level":"INFO","service":"notification-service","message":"Email queued for user 3852"}
+{"timestamp":"2026-10-19T11:12:07Z","level":"INFO","service":"notification-service","message":"Email queued for user 4719"}

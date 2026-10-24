@@ -1,0 +1,80 @@
+2026-10-22 14:00:06,607 INFO  [payment-service] POST /api/v1/payments txn=TXN-503461 status=200 latency=166ms
+2026-10-22 14:00:06,607 INFO  [order-service] Order ORD-70276 created, awaiting payment
+2026-10-22 14:00:10,656 INFO  [payment-service] POST /api/v1/payments txn=TXN-573933 status=200 latency=107ms
+2026-10-22 14:00:10,656 INFO  [order-service] Order ORD-66227 created, awaiting payment
+2026-10-22 14:00:18,849 INFO  [payment-service] POST /api/v1/payments txn=TXN-525085 status=200 latency=105ms
+2026-10-22 14:00:18,849 INFO  [order-service] Order ORD-89385 created, awaiting payment
+2026-10-22 14:00:26,323 INFO  [payment-service] POST /api/v1/payments txn=TXN-376301 status=200 latency=99ms
+2026-10-22 14:00:26,323 INFO  [order-service] Order ORD-55065 created, awaiting payment
+2026-10-22 14:00:33,443 INFO  [payment-service] POST /api/v1/payments txn=TXN-649558 status=200 latency=80ms
+2026-10-22 14:00:33,443 INFO  [order-service] Order ORD-52370 created, awaiting payment
+2026-10-22 14:00:41,467 INFO  [payment-service] POST /api/v1/payments txn=TXN-146088 status=200 latency=139ms
+2026-10-22 14:00:41,467 INFO  [order-service] Order ORD-12838 created, awaiting payment
+2026-10-22 14:00:46,069 INFO  [payment-service] POST /api/v1/payments txn=TXN-155603 status=200 latency=98ms
+2026-10-22 14:00:46,069 INFO  [order-service] Order ORD-80519 created, awaiting payment
+2026-10-22 14:00:52,251 INFO  [payment-service] POST /api/v1/payments txn=TXN-124411 status=200 latency=97ms
+2026-10-22 14:00:52,251 INFO  [order-service] Order ORD-85841 created, awaiting payment
+2026-10-22 14:00:56,251 WARN  [payment-service] HikariPool-1 - Connection pool usage at 85% (17/20 active)
+2026-10-22 14:01:02,251 WARN  [payment-db] Slow query detected: SELECT * FROM transactions WHERE status='PENDING' took 8421ms
+2026-10-22 14:01:05,251 WARN  [payment-service] HikariPool-1 - Connection pool usage at 100% (20/20 active), 14 threads waiting
+2026-10-22 14:01:08,202 ERROR [payment-service] Unable to acquire JDBC Connection: HikariPool-1 - Connection is not available, request timed out after 30000ms
+	at com.zaxxer.hikari.pool.HikariPool.getConnection(HikariPool.java:213)
+	at com.acme.payments.repo.TransactionRepository.save(TransactionRepository.java:88)
+Caused by: java.sql.SQLTransientConnectionException: HikariPool-1 - Connection is not available
+2026-10-22 14:01:09,916 ERROR [payment-service] POST /api/v1/payments txn=TXN-387515 failed: PaymentGatewayTimeoutException: payment processing timed out after 30s status=504
+2026-10-22 14:01:09,916 ERROR [api-gateway] upstream payment-service returned 504 Gateway Timeout for POST /api/v1/payments client=118.10.13.140
+2026-10-22 14:01:13,303 ERROR [payment-service] Unable to acquire JDBC Connection: HikariPool-1 - Connection is not available, request timed out after 30000ms
+2026-10-22 14:01:14,171 ERROR [payment-service] POST /api/v1/payments txn=TXN-681124 failed: PaymentGatewayTimeoutException: payment processing timed out after 30s status=504
+2026-10-22 14:01:14,171 WARN  [order-service] Order ORD-28855 payment pending > 60s, retrying (attempt 2/3)
+2026-10-22 14:01:16,386 ERROR [payment-service] Unable to acquire JDBC Connection: HikariPool-1 - Connection is not available, request timed out after 30000ms
+2026-10-22 14:01:17,994 ERROR [payment-service] POST /api/v1/payments txn=TXN-872839 failed: PaymentGatewayTimeoutException: payment processing timed out after 30s status=504
+2026-10-22 14:01:17,994 ERROR [api-gateway] upstream payment-service returned 504 Gateway Timeout for POST /api/v1/payments client=132.52.72.74
+2026-10-22 14:01:19,293 ERROR [payment-service] Unable to acquire JDBC Connection: HikariPool-1 - Connection is not available, request timed out after 30000ms
+	at com.zaxxer.hikari.pool.HikariPool.getConnection(HikariPool.java:213)
+	at com.acme.payments.repo.TransactionRepository.save(TransactionRepository.java:88)
+Caused by: java.sql.SQLTransientConnectionException: HikariPool-1 - Connection is not available
+2026-10-22 14:01:20,783 ERROR [payment-service] POST /api/v1/payments txn=TXN-712692 failed: PaymentGatewayTimeoutException: payment processing timed out after 30s status=504
+2026-10-22 14:01:24,555 ERROR [payment-service] Unable to acquire JDBC Connection: HikariPool-1 - Connection is not available, request timed out after 30000ms
+2026-10-22 14:01:26,447 ERROR [payment-service] POST /api/v1/payments txn=TXN-179171 failed: PaymentGatewayTimeoutException: payment processing timed out after 30s status=504
+2026-10-22 14:01:26,447 ERROR [api-gateway] upstream payment-service returned 504 Gateway Timeout for POST /api/v1/payments client=237.108.236.35
+2026-10-22 14:01:27,891 ERROR [payment-service] Unable to acquire JDBC Connection: HikariPool-1 - Connection is not available, request timed out after 30000ms
+2026-10-22 14:01:28,415 ERROR [payment-service] POST /api/v1/payments txn=TXN-424401 failed: PaymentGatewayTimeoutException: payment processing timed out after 30s status=504
+2026-10-22 14:01:28,415 WARN  [order-service] Order ORD-53355 payment pending > 60s, retrying (attempt 3/3)
+2026-10-22 14:01:31,863 ERROR [payment-service] Unable to acquire JDBC Connection: HikariPool-1 - Connection is not available, request timed out after 30000ms
+	at com.zaxxer.hikari.pool.HikariPool.getConnection(HikariPool.java:213)
+	at com.acme.payments.repo.TransactionRepository.save(TransactionRepository.java:88)
+Caused by: java.sql.SQLTransientConnectionException: HikariPool-1 - Connection is not available
+2026-10-22 14:01:33,712 ERROR [payment-service] POST /api/v1/payments txn=TXN-169824 failed: PaymentGatewayTimeoutException: payment processing timed out after 30s status=504
+2026-10-22 14:01:33,712 ERROR [api-gateway] upstream payment-service returned 504 Gateway Timeout for POST /api/v1/payments client=183.234.70.177
+2026-10-22 14:01:35,430 ERROR [payment-service] Unable to acquire JDBC Connection: HikariPool-1 - Connection is not available, request timed out after 30000ms
+2026-10-22 14:01:36,710 ERROR [payment-service] POST /api/v1/payments txn=TXN-839702 failed: PaymentGatewayTimeoutException: payment processing timed out after 30s status=504
+2026-10-22 14:01:38,192 ERROR [payment-service] Unable to acquire JDBC Connection: HikariPool-1 - Connection is not available, request timed out after 30000ms
+2026-10-22 14:01:40,185 ERROR [payment-service] POST /api/v1/payments txn=TXN-606520 failed: PaymentGatewayTimeoutException: payment processing timed out after 30s status=504
+2026-10-22 14:01:40,185 ERROR [api-gateway] upstream payment-service returned 504 Gateway Timeout for POST /api/v1/payments client=230.109.145.85
+2026-10-22 14:01:43,570 ERROR [payment-service] Unable to acquire JDBC Connection: HikariPool-1 - Connection is not available, request timed out after 30000ms
+	at com.zaxxer.hikari.pool.HikariPool.getConnection(HikariPool.java:213)
+	at com.acme.payments.repo.TransactionRepository.save(TransactionRepository.java:88)
+Caused by: java.sql.SQLTransientConnectionException: HikariPool-1 - Connection is not available
+2026-10-22 14:01:44,554 ERROR [payment-service] POST /api/v1/payments txn=TXN-756472 failed: PaymentGatewayTimeoutException: payment processing timed out after 30s status=504
+2026-10-22 14:01:44,554 WARN  [order-service] Order ORD-36568 payment pending > 60s, retrying (attempt 4/3)
+2026-10-22 14:01:44,554 ERROR [payment-db] FATAL: remaining connection slots are reserved for non-replication superuser connections
+2026-10-22 14:01:47,353 ERROR [payment-service] Unable to acquire JDBC Connection: HikariPool-1 - Connection is not available, request timed out after 30000ms
+2026-10-22 14:01:49,118 ERROR [payment-service] POST /api/v1/payments txn=TXN-725558 failed: PaymentGatewayTimeoutException: payment processing timed out after 30s status=504
+2026-10-22 14:01:49,118 ERROR [api-gateway] upstream payment-service returned 504 Gateway Timeout for POST /api/v1/payments client=249.223.108.137
+2026-10-22 14:01:51,302 ERROR [payment-service] Unable to acquire JDBC Connection: HikariPool-1 - Connection is not available, request timed out after 30000ms
+2026-10-22 14:01:51,953 ERROR [payment-service] POST /api/v1/payments txn=TXN-727049 failed: PaymentGatewayTimeoutException: payment processing timed out after 30s status=504
+2026-10-22 14:01:54,206 ERROR [payment-service] Unable to acquire JDBC Connection: HikariPool-1 - Connection is not available, request timed out after 30000ms
+	at com.zaxxer.hikari.pool.HikariPool.getConnection(HikariPool.java:213)
+	at com.acme.payments.repo.TransactionRepository.save(TransactionRepository.java:88)
+Caused by: java.sql.SQLTransientConnectionException: HikariPool-1 - Connection is not available
+2026-10-22 14:01:55,885 ERROR [payment-service] POST /api/v1/payments txn=TXN-914297 failed: PaymentGatewayTimeoutException: payment processing timed out after 30s status=504
+2026-10-22 14:01:55,885 ERROR [api-gateway] upstream payment-service returned 504 Gateway Timeout for POST /api/v1/payments client=32.119.206.33
+2026-10-22 14:02:00,776 ERROR [payment-service] Unable to acquire JDBC Connection: HikariPool-1 - Connection is not available, request timed out after 30000ms
+2026-10-22 14:02:01,544 ERROR [payment-service] POST /api/v1/payments txn=TXN-738486 failed: PaymentGatewayTimeoutException: payment processing timed out after 30s status=504
+2026-10-22 14:02:01,544 WARN  [order-service] Order ORD-72972 payment pending > 60s, retrying (attempt 5/3)
+2026-10-22 14:02:06,544 ERROR [order-service] Circuit breaker 'paymentClient' is OPEN - failing fast for 60s
+2026-10-22 14:02:08,214 ERROR [order-service] Checkout failed for order ORD-47157: payment service unavailable (circuit open)
+2026-10-22 14:02:09,704 ERROR [order-service] Checkout failed for order ORD-68919: payment service unavailable (circuit open)
+2026-10-22 14:02:11,712 ERROR [order-service] Checkout failed for order ORD-28625: payment service unavailable (circuit open)
+2026-10-22 14:02:14,599 ERROR [order-service] Checkout failed for order ORD-89819: payment service unavailable (circuit open)
+2026-10-22 14:02:17,599 INFO  [payment-service] Health check /actuator/health status=DOWN (db: DOWN)

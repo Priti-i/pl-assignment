@@ -1,0 +1,54 @@
+2026-10-21 09:32:00,000 INFO  [cart-service] GET /api/cart status=200 latency=136ms
+2026-10-21 09:34:00,000 INFO  [cart-service] GET /api/cart status=200 latency=106ms
+2026-10-21 09:36:00,000 INFO  [cart-service] GET /api/cart status=200 latency=124ms
+2026-10-21 09:38:00,000 INFO  [cart-service] GET /api/cart status=200 latency=146ms
+2026-10-21 09:40:00,000 INFO  [cart-service] GET /api/cart status=200 latency=158ms
+2026-10-21 09:40:00,000 WARN  [cart-service] JVM heap usage at 74% after full GC (GC pause 1672ms)
+2026-10-21 09:42:00,000 INFO  [cart-service] GET /api/cart status=200 latency=147ms
+2026-10-21 09:42:00,000 WARN  [cart-service] JVM heap usage at 77% after full GC (GC pause 1085ms)
+2026-10-21 09:44:00,000 INFO  [cart-service] GET /api/cart status=200 latency=122ms
+2026-10-21 09:44:00,000 WARN  [cart-service] JVM heap usage at 80% after full GC (GC pause 1388ms)
+2026-10-21 09:46:00,000 INFO  [cart-service] GET /api/cart status=200 latency=139ms
+2026-10-21 09:46:00,000 WARN  [cart-service] JVM heap usage at 85% after full GC (GC pause 785ms)
+2026-10-21 09:48:00,000 INFO  [cart-service] GET /api/cart status=200 latency=130ms
+2026-10-21 09:48:00,000 WARN  [cart-service] JVM heap usage at 89% after full GC (GC pause 709ms)
+2026-10-21 09:50:00,000 INFO  [cart-service] GET /api/cart status=200 latency=164ms
+2026-10-21 09:50:00,000 WARN  [cart-service] JVM heap usage at 95% after full GC (GC pause 1784ms)
+2026-10-21 09:50:00,000 WARN  [cart-service] GC overhead limit approaching: 92% of time spent in GC over last 60s
+2026-10-21 09:50:40,000 ERROR [cart-service] Exception in thread "http-nio-8080-exec-17" java.lang.OutOfMemoryError: Java heap space
+	at java.util.Arrays.copyOf(Arrays.java:3512)
+	at com.acme.cart.SessionCartCache.put(SessionCartCache.java:57)
+2026-10-21 09:50:40,000 FATAL [cart-service] Application terminated unexpectedly, exited with code 137
+2026-10-21 09:50:40,000 WARN  [kubelet] Container cart-service-7d9f8 OOMKilled (memory limit 1Gi), restarting (restart count 1)
+2026-10-21 09:50:42,000 ERROR [checkout-service] GET http://cart-service:8080/api/cart failed: Connection refused
+2026-10-21 09:50:42,000 ERROR [api-gateway] upstream cart-service returned 503 Service Unavailable for GET /api/cart
+2026-10-21 09:50:44,000 ERROR [checkout-service] GET http://cart-service:8080/api/cart failed: Connection refused
+2026-10-21 09:50:44,000 ERROR [api-gateway] upstream cart-service returned 503 Service Unavailable for GET /api/cart
+2026-10-21 09:50:46,000 ERROR [checkout-service] GET http://cart-service:8080/api/cart failed: Connection refused
+2026-10-21 09:50:46,000 ERROR [api-gateway] upstream cart-service returned 503 Service Unavailable for GET /api/cart
+2026-10-21 09:51:11,000 INFO  [cart-service] Started CartApplication in 18.4 seconds
+2026-10-21 09:51:51,000 ERROR [cart-service] Exception in thread "http-nio-8080-exec-17" java.lang.OutOfMemoryError: Java heap space
+	at java.util.Arrays.copyOf(Arrays.java:3512)
+	at com.acme.cart.SessionCartCache.put(SessionCartCache.java:57)
+2026-10-21 09:51:51,000 FATAL [cart-service] Application terminated unexpectedly, exited with code 137
+2026-10-21 09:51:51,000 WARN  [kubelet] Container cart-service-7d9f8 OOMKilled (memory limit 1Gi), restarting (restart count 2)
+2026-10-21 09:51:53,000 ERROR [checkout-service] GET http://cart-service:8080/api/cart failed: Connection refused
+2026-10-21 09:51:53,000 ERROR [api-gateway] upstream cart-service returned 503 Service Unavailable for GET /api/cart
+2026-10-21 09:51:55,000 ERROR [checkout-service] GET http://cart-service:8080/api/cart failed: Connection refused
+2026-10-21 09:51:55,000 ERROR [api-gateway] upstream cart-service returned 503 Service Unavailable for GET /api/cart
+2026-10-21 09:51:57,000 ERROR [checkout-service] GET http://cart-service:8080/api/cart failed: Connection refused
+2026-10-21 09:51:57,000 ERROR [api-gateway] upstream cart-service returned 503 Service Unavailable for GET /api/cart
+2026-10-21 09:52:22,000 INFO  [cart-service] Started CartApplication in 18.4 seconds
+2026-10-21 09:53:02,000 ERROR [cart-service] Exception in thread "http-nio-8080-exec-17" java.lang.OutOfMemoryError: Java heap space
+	at java.util.Arrays.copyOf(Arrays.java:3512)
+	at com.acme.cart.SessionCartCache.put(SessionCartCache.java:57)
+2026-10-21 09:53:02,000 FATAL [cart-service] Application terminated unexpectedly, exited with code 137
+2026-10-21 09:53:02,000 WARN  [kubelet] Container cart-service-7d9f8 OOMKilled (memory limit 1Gi), restarting (restart count 3)
+2026-10-21 09:53:04,000 ERROR [checkout-service] GET http://cart-service:8080/api/cart failed: Connection refused
+2026-10-21 09:53:04,000 ERROR [api-gateway] upstream cart-service returned 503 Service Unavailable for GET /api/cart
+2026-10-21 09:53:06,000 ERROR [checkout-service] GET http://cart-service:8080/api/cart failed: Connection refused
+2026-10-21 09:53:06,000 ERROR [api-gateway] upstream cart-service returned 503 Service Unavailable for GET /api/cart
+2026-10-21 09:53:08,000 ERROR [checkout-service] GET http://cart-service:8080/api/cart failed: Connection refused
+2026-10-21 09:53:08,000 ERROR [api-gateway] upstream cart-service returned 503 Service Unavailable for GET /api/cart
+2026-10-21 09:53:33,000 INFO  [cart-service] Started CartApplication in 18.4 seconds
+2026-10-21 09:53:33,000 WARN  [kubelet] Back-off restarting failed container cart-service-7d9f8 (CrashLoopBackOff)

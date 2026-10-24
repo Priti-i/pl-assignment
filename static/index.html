@@ -1,0 +1,586 @@
+<!doctype html>
+<html lang="en">
+
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>Incident Analyzer</title>
+  <style>
+    :root {
+      --bg: #f6f7f9;
+      --panel: #ffffff;
+      --text: #1b1f24;
+      --muted: #5d6673;
+      --border: #e1e4e8;
+      --accent: #2f6fde;
+      --accent-text: #ffffff;
+      --code-bg: #f1f3f5;
+      --crit: #c62828;
+      --high: #e8590c;
+      --med: #c99700;
+      --low: #2e7d32;
+      --ok: #2e7d32;
+      --warn: #b26a00;
+      --ev-bg: #eef6ee;
+      --as-bg: #fff6e5;
+      color-scheme: light;
+    }
+
+    @media (prefers-color-scheme: dark) {
+      :root {
+        --bg: #111418;
+        --panel: #1a1e24;
+        --text: #e6e8eb;
+        --muted: #9aa3ad;
+        --border: #2c323a;
+        --accent: #5b8ff0;
+        --code-bg: #20252c;
+        --ev-bg: #17271a;
+        --as-bg: #2c2414;
+        --crit: #ef5350;
+        --high: #ff8a3d;
+        --med: #e0b52a;
+        --low: #5cb860;
+        --ok: #5cb860;
+        --warn: #e0a33a;
+        color-scheme: dark;
+      }
+    }
+
+    * {
+      box-sizing: border-box;
+    }
+
+    body {
+      margin: 0;
+      background: var(--bg);
+      color: var(--text);
+      font: 14px/1.5 -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
+    }
+
+    header {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      gap: 12px;
+      flex-wrap: wrap;
+      padding: 14px 24px;
+      border-bottom: 1px solid var(--border);
+      background: var(--panel);
+    }
+
+    header h1 {
+      margin: 0;
+      font-size: 18px;
+    }
+
+    header small {
+      color: var(--muted);
+    }
+
+    main {
+      max-width: 1180px;
+      margin: 0 auto;
+      padding: 20px 16px 48px;
+      display: grid;
+      gap: 16px;
+    }
+
+    .panel {
+      background: var(--panel);
+      border: 1px solid var(--border);
+      border-radius: 10px;
+      padding: 16px 18px;
+    }
+
+    .panel h2 {
+      margin: 0 0 10px;
+      font-size: 15px;
+    }
+
+    .panel h3 {
+      margin: 14px 0 6px;
+      font-size: 13px;
+      color: var(--muted);
+      text-transform: uppercase;
+      letter-spacing: .04em;
+    }
+
+    textarea {
+      width: 100%;
+      min-height: 220px;
+      resize: vertical;
+      padding: 10px;
+      border-radius: 8px;
+      border: 1px solid var(--border);
+      background: var(--code-bg);
+      color: var(--text);
+      font: 12px/1.45 ui-monospace, SFMono-Regular, Menlo, monospace;
+    }
+
+    .row {
+      display: flex;
+      gap: 10px;
+      align-items: center;
+      flex-wrap: wrap;
+    }
+
+    .spacer {
+      flex: 1;
+    }
+
+    button,
+    select,
+    .file-btn {
+      font: inherit;
+      padding: 7px 12px;
+      border-radius: 7px;
+      border: 1px solid var(--border);
+      background: var(--panel);
+      color: var(--text);
+      cursor: pointer;
+    }
+
+    button.primary {
+      background: var(--accent);
+      color: var(--accent-text);
+      border-color: var(--accent);
+      font-weight: 600;
+    }
+
+    button:disabled {
+      opacity: .6;
+      cursor: progress;
+    }
+
+    .file-btn input {
+      display: none;
+    }
+
+    .pill {
+      display: inline-flex;
+      align-items: center;
+      gap: 6px;
+      padding: 3px 10px;
+      border-radius: 999px;
+      border: 1px solid var(--border);
+      font-size: 12px;
+      color: var(--muted);
+    }
+
+    .dot {
+      width: 8px;
+      height: 8px;
+      border-radius: 50%;
+      background: var(--muted);
+    }
+
+    .dot.ok {
+      background: var(--ok);
+    }
+
+    .dot.bad {
+      background: var(--crit);
+    }
+
+    .dot.warn {
+      background: var(--warn);
+    }
+
+    .grid2 {
+      display: grid;
+      grid-template-columns: repeat(auto-fit, minmax(320px, 1fr));
+      gap: 16px;
+    }
+
+    .sev {
+      display: inline-block;
+      padding: 4px 12px;
+      border-radius: 6px;
+      color: #fff;
+      font-weight: 700;
+    }
+
+    .sev.Critical {
+      background: var(--crit);
+    }
+
+    .sev.High {
+      background: var(--high);
+    }
+
+    .sev.Medium {
+      background: var(--med);
+      color: #1b1f24;
+    }
+
+    .sev.Low {
+      background: var(--low);
+    }
+
+    .stats {
+      display: grid;
+      grid-template-columns: repeat(auto-fit, minmax(130px, 1fr));
+      gap: 10px;
+    }
+
+    .stat {
+      border: 1px solid var(--border);
+      border-radius: 8px;
+      padding: 8px 10px;
+    }
+
+    .stat b {
+      display: block;
+      font-size: 20px;
+      font-variant-numeric: tabular-nums;
+    }
+
+    .stat span {
+      color: var(--muted);
+      font-size: 12px;
+    }
+
+    .table-wrap {
+      overflow-x: auto;
+    }
+
+    table {
+      width: 100%;
+      border-collapse: collapse;
+      font-size: 13px;
+    }
+
+    th,
+    td {
+      text-align: left;
+      padding: 7px 8px;
+      border-bottom: 1px solid var(--border);
+      vertical-align: top;
+    }
+
+    th {
+      color: var(--muted);
+      font-weight: 600;
+      font-size: 12px;
+    }
+
+    td.num {
+      text-align: right;
+      font-variant-numeric: tabular-nums;
+    }
+
+    code,
+    .mono {
+      font-family: ui-monospace, SFMono-Regular, Menlo, monospace;
+      font-size: 12px;
+    }
+
+    .tag {
+      font-size: 11px;
+      padding: 1px 7px;
+      border-radius: 4px;
+      white-space: nowrap;
+    }
+
+    .tag.ok {
+      color: var(--ok);
+      border: 1px solid var(--ok);
+    }
+
+    .tag.warn {
+      color: var(--warn);
+      border: 1px solid var(--warn);
+    }
+
+    ul,
+    ol {
+      margin: 4px 0;
+      padding-left: 20px;
+    }
+
+    li {
+      margin: 3px 0;
+    }
+
+    .box {
+      border-radius: 8px;
+      padding: 10px 12px;
+    }
+
+    .box.ev {
+      background: var(--ev-bg);
+    }
+
+    .box.as {
+      background: var(--as-bg);
+    }
+
+    .muted {
+      color: var(--muted);
+    }
+
+    .note {
+      border-left: 3px solid var(--warn);
+      padding: 8px 12px;
+      background: var(--as-bg);
+      border-radius: 4px;
+    }
+
+    .error {
+      border-left: 3px solid var(--crit);
+      padding: 8px 12px;
+      border-radius: 4px;
+    }
+
+    .bars {
+      display: flex;
+      align-items: flex-end;
+      gap: 2px;
+      height: 60px;
+    }
+
+    .bars div {
+      flex: 1;
+      background: var(--crit);
+      min-height: 2px;
+      border-radius: 2px 2px 0 0;
+      opacity: .8;
+    }
+
+    pre {
+      white-space: pre-wrap;
+      background: var(--code-bg);
+      padding: 12px;
+      border-radius: 8px;
+      margin: 0;
+      font: 12px/1.5 ui-monospace, SFMono-Regular, Menlo, monospace;
+      max-height: 420px;
+      overflow: auto;
+    }
+
+    details summary {
+      cursor: pointer;
+      color: var(--muted);
+    }
+
+    .spinner {
+      width: 14px;
+      height: 14px;
+      border: 2px solid currentColor;
+      border-right-color: transparent;
+      border-radius: 50%;
+      display: inline-block;
+      animation: spin .8s linear infinite;
+      vertical-align: -2px;
+    }
+
+    @keyframes spin {
+      to {
+        transform: rotate(360deg);
+      }
+    }
+  </style>
+</head>
+
+<body>
+  <header>
+    <div>
+      <h1>Incident Analyzer</h1>
+      <small>AI-assisted log triage for Technology Operations · runs fully local</small>
+    </div>
+    <span class="pill" id="health"><span class="dot"></span><span>Checking model…</span></span>
+  </header>
+
+  <main>
+    <section class="panel">
+      <h2>1. Provide logs</h2>
+      <div class="row" style="margin-bottom:10px">
+        <label class="file-btn">Upload log file<input type="file" id="file"
+            accept=".log,.txt,.jsonl,.json,text/plain"></label>
+        <select id="sample">
+          <option value="">Load a sample…</option>
+        </select>
+        <span class="muted" id="inputInfo"></span>
+      </div>
+      <textarea id="logs" placeholder="Paste application logs here (plain text or JSON lines)…"></textarea>
+      <div class="row" style="margin-top:10px">
+        <label class="row" style="gap:6px"><input type="checkbox" id="useLlm" checked> Use AI (local Ollama
+          model)</label>
+        <span class="spacer"></span>
+        <button id="clear">Clear</button>
+        <button class="primary" id="analyze">Analyze logs</button>
+      </div>
+    </section>
+
+    <div id="status"></div>
+    <div id="results" hidden></div>
+  </main>
+
+  <script>
+    const $ = (id) => document.getElementById(id);
+    const esc = (s) => String(s ?? "").replace(/[&<>"']/g, c => ({ "&": "&amp;", "<": "&lt;", ">": "&gt;", '"': "&quot;", "'": "&#39;" }[c]));
+    const list = (items, empty = "None") => items && items.length
+      ? `<ul>${items.map(i => `<li>${esc(i)}</li>`).join("")}</ul>` : `<p class="muted">${empty}</p>`;
+    let lastMarkdown = "";
+
+    async function checkHealth() {
+      const pill = $("health");
+      try {
+        const h = await (await fetch("/api/health")).json();
+        const cls = h.model_ready ? "ok" : h.ollama ? "warn" : "bad";
+        const text = h.model_ready ? `Model ready: ${h.model}`
+          : h.ollama ? `Ollama up · ${h.model} not installed (rule fallback)` : "Ollama offline (rule fallback)";
+        pill.innerHTML = `<span class="dot ${cls}"></span><span>${esc(text)}</span>`;
+        pill.title = h.error || "";
+      } catch { pill.innerHTML = `<span class="dot bad"></span><span>Server unreachable</span>`; }
+    }
+
+    async function loadSamples() {
+      const { samples } = await (await fetch("/api/samples")).json();
+      $("sample").insertAdjacentHTML("beforeend", samples.map(s => `<option>${esc(s)}</option>`).join(""));
+    }
+
+    function updateInfo() {
+      const t = $("logs").value;
+      $("inputInfo").textContent = t ? `${t.split("\n").filter(Boolean).length} lines` : "";
+    }
+
+    $("sample").onchange = async (e) => {
+      if (!e.target.value) return;
+      $("logs").value = await (await fetch(`/api/samples/${encodeURIComponent(e.target.value)}`)).text();
+      updateInfo();
+    };
+    $("file").onchange = async (e) => {
+      const f = e.target.files[0];
+      if (!f) return;
+      $("logs").value = await f.text();
+      $("sample").value = "";
+      updateInfo();
+    };
+    $("logs").oninput = updateInfo;
+    $("clear").onclick = () => { $("logs").value = ""; $("results").hidden = true; $("status").innerHTML = ""; updateInfo(); };
+
+    $("analyze").onclick = async () => {
+      const logs = $("logs").value;
+      if (!logs.trim()) { $("status").innerHTML = `<div class="panel error">Paste or upload some logs first.</div>`; return; }
+      const btn = $("analyze");
+      btn.disabled = true;
+      const useLlm = $("useLlm").checked;
+      $("status").innerHTML = `<div class="panel"><span class="spinner"></span> ${useLlm
+        ? "Parsing logs and asking the local model… (first run can take 20–60s while the model loads)"
+        : "Running rule-based analysis…"}</div>`;
+      try {
+        const res = await fetch("/api/analyze", {
+          method: "POST", headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({ logs, use_llm: useLlm })
+        });
+        const data = await res.json();
+        if (!res.ok) throw new Error(data.error || res.statusText);
+        $("status").innerHTML = "";
+        render(data);
+      } catch (err) {
+        $("status").innerHTML = `<div class="panel error">${esc(err.message)}</div>`;
+      } finally { btn.disabled = false; checkHealth(); }
+    };
+
+    function render(d) {
+      const r = d.report, ev = d.evidence, b = d.baseline, lc = r.likely_cause, esc_ = r.escalation;
+      lastMarkdown = d.markdown;
+      const src = d.meta.source === "llm"
+        ? `AI: ${esc(d.meta.model)} · ${d.meta.duration_s}s · ${d.meta.prompt_tokens ?? "?"}→${d.meta.output_tokens ?? "?"} tokens`
+        : "Rule engine (no AI)";
+      const g = d.grounding;
+      const minutes = Object.entries(ev.errors_per_minute);
+      const maxPerMin = Math.max(1, ...minutes.map(m => m[1]));
+
+      $("results").innerHTML = `
+  ${r.note ? `<div class="note">${esc(r.note)}</div>` : ""}
+
+  <section class="panel">
+    <div class="row">
+      <h2 style="margin:0">Incident summary</h2>
+      <span class="sev ${esc(r.severity.level)}">${esc(r.severity.level)}</span>
+      <span class="spacer"></span>
+      <span class="muted">${src}</span>
+      <button id="copyMd">Copy summary (Markdown)</button>
+    </div>
+    <p style="font-size:15px">${esc(r.incident_summary)}</p>
+    <div class="grid2">
+      <div>
+        <h3>Severity reasoning</h3>
+        <p>${esc(r.severity.reason)}</p>
+        ${r.impact ? `<h3>Impact</h3><p>${esc(r.impact)}</p>` : ""}
+      </div>
+      <div>
+        <h3>Rule-based baseline</h3>
+        <p><span class="sev ${esc(b.level)}">${esc(b.level)}</span>
+          ${b.disagrees_with_ai ? `<span class="tag warn">differs from AI — review</span>` : d.meta.source === "llm" ? `<span class="tag ok">agrees with AI</span>` : ""}</p>
+        ${list(b.reasons)}
+      </div>
+    </div>
+  </section>
+
+
+  <section class="panel">
+    <h2>Key errors &amp; patterns</h2>
+    <div class="table-wrap"><table>
+      <tr><th>Error</th><th class="num">Count</th><th>Services</th><th>Significance</th><th>In logs?</th></tr>
+      ${r.key_errors.map(e => `<tr><td class="mono">${esc(e.error)}</td><td class="num">${esc(e.count)}</td>
+        <td>${esc((e.services || []).join(", "))}</td><td>${esc(e.significance)}</td>
+        <td>${e.grounded ? `<span class="tag ok">verified</span>` : `<span class="tag warn">not found</span>`}</td></tr>`).join("")}
+    </table></div>
+    <h3>Patterns &amp; repeated failures</h3>
+    ${list(r.patterns)}
+    <p class="muted" style="font-size:12px">Grounding check: ${g.grounded}/${g.checked} AI-cited errors and evidence items were matched against the raw logs.</p>
+  </section>
+
+  <section class="panel">
+    <h2>Likely cause <span class="muted" style="font-weight:400">— hypothesis, confidence: ${esc(lc.confidence)}</span></h2>
+    <p style="font-size:15px">${esc(lc.hypothesis)}</p>
+    <div class="grid2">
+      <div class="box ev"><h3 style="margin-top:0">Evidence (seen in logs)</h3>
+        ${lc.evidence.length ? `<ul>${lc.evidence.map((x, i) => `<li>${esc(x)} ${lc.evidence_checks?.[i] === false ? `<span class="tag warn">not matched in logs</span>` : ""}</li>`).join("")}</ul>` : `<p class="muted">None cited</p>`}
+      </div>
+      <div class="box as"><h3 style="margin-top:0">Assumptions (not confirmed)</h3>${list(lc.assumptions, "None stated")}</div>
+    </div>
+    ${r.contributing_factors.length ? `<h3>Possible contributing factors</h3>${list(r.contributing_factors)}` : ""}
+  </section>
+
+  <section class="panel grid2">
+    <div>
+      <h2>Recommended troubleshooting steps</h2>
+      <ol>${r.troubleshooting_steps.map(s => `<li><b>${esc(s.step)}</b>${s.why ? `<br><span class="muted">${esc(s.why)}</span>` : ""}</li>`).join("")}</ol>
+    </div>
+    <div>
+      <h2>Escalation</h2>
+      <p><span class="sev ${esc_.required ? "Critical" : "Low"}">${esc_.required ? "Escalate" : "Not yet required"}</span></p>
+      <p><b>To:</b> ${esc(esc_.to)}</p>
+      <p><b>When:</b> ${esc(esc_.when)}</p>
+    </div>
+  </section>
+
+  <section class="panel">
+    <details><summary>Shareable Markdown summary</summary><pre>${esc(d.markdown)}</pre></details>
+    <details style="margin-top:8px"><summary>Raw analysis JSON</summary><pre>${esc(JSON.stringify({ report: r, baseline: b, grounding: g, meta: d.meta }, null, 2))}</pre></details>
+  </section>`;
+      $("results").hidden = false;
+      $("copyMd").onclick = async (e) => {
+        try { await navigator.clipboard.writeText(lastMarkdown); e.target.textContent = "Copied ✓"; }
+        catch { e.target.textContent = "Copy failed — use the Markdown section below"; }
+      };
+      $("results").scrollIntoView({ behavior: "smooth" });
+    }
+
+    function fmtDur(s) {
+      if (s < 60) return `${s}s`;
+      if (s < 3600) return `${Math.floor(s / 60)}m ${s % 60}s`;
+      return `${Math.floor(s / 3600)}h ${Math.floor(s % 3600 / 60)}m`;
+    }
+
+    checkHealth(); loadSamples();
+    setInterval(checkHealth, 15000);
+  </script>
+</body>
+
+</html>

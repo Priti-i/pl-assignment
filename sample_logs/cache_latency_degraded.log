@@ -1,0 +1,51 @@
+2026-10-20 18:10:06,639 INFO  [catalog-service] GET /api/products/2537 status=200 latency=81ms
+2026-10-20 18:10:14,564 INFO  [catalog-service] GET /api/products/4551 status=200 latency=69ms
+2026-10-20 18:10:23,748 INFO  [catalog-service] GET /api/products/7175 status=200 latency=66ms
+2026-10-20 18:10:32,109 INFO  [catalog-service] GET /api/products/9060 status=200 latency=59ms
+2026-10-20 18:10:32,109 WARN  [catalog-service] Redis command GET took 572ms (threshold 200ms) host=10.0.4.21:6379
+2026-10-20 18:10:43,218 INFO  [catalog-service] GET /api/products/5917 status=200 latency=83ms
+2026-10-20 18:10:50,572 INFO  [catalog-service] GET /api/products/3928 status=200 latency=57ms
+2026-10-20 18:10:58,778 INFO  [catalog-service] GET /api/products/7023 status=200 latency=50ms
+2026-10-20 18:11:05,471 INFO  [catalog-service] GET /api/products/7254 status=200 latency=58ms
+2026-10-20 18:11:11,720 INFO  [catalog-service] GET /api/products/3824 status=200 latency=33ms
+2026-10-20 18:11:22,495 INFO  [catalog-service] GET /api/products/2869 status=200 latency=73ms
+2026-10-20 18:11:22,495 WARN  [catalog-service] Redis command GET took 497ms (threshold 200ms) host=10.0.4.21:6379
+2026-10-20 18:11:34,615 INFO  [catalog-service] GET /api/products/9213 status=200 latency=103ms
+2026-10-20 18:11:44,009 INFO  [catalog-service] GET /api/products/2387 status=200 latency=108ms
+2026-10-20 18:11:54,266 INFO  [catalog-service] GET /api/products/8563 status=200 latency=111ms
+2026-10-20 18:12:03,767 INFO  [catalog-service] GET /api/products/2319 status=200 latency=86ms
+2026-10-20 18:12:16,843 INFO  [catalog-service] GET /api/products/2875 status=200 latency=65ms
+2026-10-20 18:12:16,843 ERROR [catalog-service] Redis timeout: Command timed out after 1000ms; falling back to database read
+2026-10-20 18:12:27,300 INFO  [catalog-service] GET /api/products/9860 status=200 latency=74ms
+2026-10-20 18:12:27,300 WARN  [catalog-service] Redis command GET took 809ms (threshold 200ms) host=10.0.4.21:6379
+2026-10-20 18:12:40,732 INFO  [catalog-service] GET /api/products/7692 status=200 latency=34ms
+2026-10-20 18:12:46,425 INFO  [catalog-service] GET /api/products/2523 status=200 latency=76ms
+2026-10-20 18:12:58,192 INFO  [catalog-service] GET /api/products/7847 status=200 latency=120ms
+2026-10-20 18:13:11,352 INFO  [catalog-service] GET /api/products/6684 status=200 latency=106ms
+2026-10-20 18:13:24,882 INFO  [catalog-service] GET /api/products/6394 status=200 latency=61ms
+2026-10-20 18:13:24,882 WARN  [redis-cache] used_memory 3.6GB of maxmemory 4GB, evicting keys (policy allkeys-lru)
+2026-10-20 18:13:34,351 INFO  [catalog-service] GET /api/products/8905 status=200 latency=91ms
+2026-10-20 18:13:34,351 WARN  [catalog-service] Redis command GET took 477ms (threshold 200ms) host=10.0.4.21:6379
+2026-10-20 18:13:48,726 INFO  [catalog-service] GET /api/products/6633 status=200 latency=59ms
+2026-10-20 18:14:02,173 INFO  [catalog-service] GET /api/products/2364 status=200 latency=63ms
+2026-10-20 18:14:07,373 INFO  [catalog-service] GET /api/products/1769 status=200 latency=88ms
+2026-10-20 18:14:19,637 INFO  [catalog-service] GET /api/products/9603 status=200 latency=110ms
+2026-10-20 18:14:29,299 INFO  [catalog-service] GET /api/products/7367 status=200 latency=43ms
+2026-10-20 18:14:37,030 INFO  [catalog-service] GET /api/products/2252 status=200 latency=34ms
+2026-10-20 18:14:37,030 WARN  [catalog-service] Redis command GET took 439ms (threshold 200ms) host=10.0.4.21:6379
+2026-10-20 18:14:37,030 ERROR [catalog-service] Redis timeout: Command timed out after 1000ms; falling back to database read
+2026-10-20 18:14:46,440 INFO  [catalog-service] GET /api/products/6118 status=200 latency=95ms
+2026-10-20 18:14:59,376 INFO  [catalog-service] GET /api/products/8063 status=200 latency=47ms
+2026-10-20 18:15:11,040 INFO  [catalog-service] GET /api/products/5660 status=200 latency=70ms
+2026-10-20 18:15:20,730 INFO  [catalog-service] GET /api/products/5131 status=200 latency=68ms
+2026-10-20 18:15:29,049 INFO  [catalog-service] GET /api/products/3768 status=200 latency=43ms
+2026-10-20 18:15:39,095 INFO  [catalog-service] GET /api/products/3406 status=200 latency=78ms
+2026-10-20 18:15:39,095 WARN  [catalog-service] Redis command GET took 606ms (threshold 200ms) host=10.0.4.21:6379
+2026-10-20 18:15:39,095 ERROR [catalog-service] Redis timeout: Command timed out after 1000ms; falling back to database read
+2026-10-20 18:15:50,569 INFO  [catalog-service] GET /api/products/4934 status=200 latency=42ms
+2026-10-20 18:15:55,607 INFO  [catalog-service] GET /api/products/2333 status=200 latency=115ms
+2026-10-20 18:16:01,300 INFO  [catalog-service] GET /api/products/8835 status=200 latency=69ms
+2026-10-20 18:16:11,325 INFO  [catalog-service] GET /api/products/1889 status=200 latency=104ms
+2026-10-20 18:16:16,892 INFO  [catalog-service] GET /api/products/4335 status=200 latency=50ms
+2026-10-20 18:16:28,920 INFO  [catalog-service] GET /api/products/6076 status=200 latency=38ms
+2026-10-20 18:16:28,920 WARN  [catalog-service] Redis command GET took 879ms (threshold 200ms) host=10.0.4.21:6379
