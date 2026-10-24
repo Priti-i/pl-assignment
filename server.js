@@ -18,6 +18,9 @@ const SAMPLES = join(ROOT, "sample_logs");
 const SAMPLE_EXTS = new Set([".log", ".jsonl", ".txt"]);
 const MAX_BODY = 5 * 1024 * 1024;
 const PORT = Number(process.env.PORT || 8000);
+// Hosting platforms (Render sets RENDER=true) must reach the app from outside;
+// locally, stay on loopback so logs are not exposed on the network.
+const HOST = process.env.HOST || (process.env.RENDER ? "0.0.0.0" : "127.0.0.1");
 
 function send(res, status, body, type = "application/json") {
   const data = Buffer.isBuffer(body) || typeof body === "string" ? body : JSON.stringify(body);
@@ -95,9 +98,9 @@ const server = createServer(async (req, res) => {
 // Local model calls can take over a minute; don't let Node cut the request off.
 server.requestTimeout = 0;
 
-server.listen(PORT, "127.0.0.1", async () => {
+server.listen(PORT, HOST, async () => {
   const h = await llm.health();
   console.log(`Ollama: ${h.ollama ? "reachable" : "NOT reachable"} at ${llm.OLLAMA_HOST} | model ${h.model}: `
     + (h.model_ready ? "ready" : "NOT installed (rule-based fallback will be used)"));
-  console.log(`Incident Analyzer running at http://localhost:${PORT}`);
+  console.log(`Incident Analyzer running at http://${HOST}:${PORT}`);
 });

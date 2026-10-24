@@ -82,6 +82,7 @@ The pill in the header shows whether the model is ready. If it isn't, the tool s
 | `OLLAMA_HOST` | `http://localhost:11434` | Ollama endpoint |
 | `OLLAMA_TIMEOUT` | `300` | Seconds to wait for the model |
 | `PORT` | `8000` | Web server port |
+| `HOST` | `127.0.0.1` (`0.0.0.0` on Render) | Address to listen on; set `0.0.0.0` on other cloud hosts |
 
 ---
 
