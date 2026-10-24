@@ -68,31 +68,21 @@ These screenshots are from the live Render deployment. Ollama isn't available th
 
 ### 1. Home screen: provide logs
 
-Upload a log file, load a sample, or paste logs. The pill in the top-right shows whether the AI model is available.
-
 ![Home screen with upload, sample selector and log input](screenshots/02-home.png)
 
 ### 2. Incident summary and severity
-
-After you click **Analyze logs**, the report opens with the severity badge, a one-line summary, the reasoning behind the severity, the impact, and the rule-based baseline for comparison.
 
 ![Incident summary with High severity and rule-based baseline](screenshots/03-incident-summary.png)
 
 ### 3. Key errors, patterns and likely cause
 
-Repeated errors are grouped with counts, services and time ranges. Each one is marked **verified** when it is found in the raw logs. The likely cause is shown as a hypothesis, with **Evidence (seen in logs)** kept separate from **Assumptions (not confirmed)**.
-
 ![Key errors table, repeated failures and likely cause with evidence and assumptions](screenshots/04-key-errors-and-cause.png)
 
 ### 4. Troubleshooting steps and escalation
 
-Steps are ordered with checks first, and each step says why it matters. The escalation panel shows whether to escalate, to whom, and when.
-
 ![Recommended troubleshooting steps and escalation guidance](screenshots/05-steps-and-escalation.png)
 
 ### 5. Shareable summary and raw JSON
-
-A Markdown summary ready to paste into Slack, Teams or email, plus the full analysis as JSON for debugging.
 
 ![Shareable Markdown summary and raw analysis JSON](screenshots/06-markdown-and-json.png)
 
@@ -129,7 +119,3 @@ The project is expected to have 14 unit tests according to the current project n
 - The prototype analyzes one log batch at a time and does not correlate logs with metrics, traces, or other uploads.
 - Severity thresholds and troubleshooting guidance are heuristic and have not been tuned against a labelled production-incident dataset.
 - The hosted Render deployment does not have a local Ollama service available and therefore uses rule-based analysis when AI is unreachable.
-
-## Responsible Use
-
-Treat the suggested root cause as a hypothesis, not a confirmed diagnosis. Verify evidence and troubleshooting steps before taking action. Do not submit passwords, access tokens, personal information, or confidential production logs unless the environment's data-handling and security arrangements have been approved.
